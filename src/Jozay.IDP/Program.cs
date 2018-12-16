@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Jozay.IDP
+namespace ImageGallery.IdentityServer
 {
     public class Program
     {

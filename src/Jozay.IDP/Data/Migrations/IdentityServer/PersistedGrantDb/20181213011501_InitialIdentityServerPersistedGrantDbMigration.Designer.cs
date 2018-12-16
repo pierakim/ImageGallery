@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Jozay.IDP.Data.Migrations.IdentityServer.PersistedGrantDb
+namespace ImageGallery.IdentityServer.Data.Migrations.IdentityServer.PersistedGrantDb
 {
     [DbContext(typeof(PersistedGrantDbContext))]
     [Migration("20181213011501_InitialIdentityServerPersistedGrantDbMigration")]

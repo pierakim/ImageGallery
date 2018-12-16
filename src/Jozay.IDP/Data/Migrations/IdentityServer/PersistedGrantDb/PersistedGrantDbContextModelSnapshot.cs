@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Jozay.IDP.Data.Migrations.IdentityServer.PersistedGrantDb
+namespace ImageGallery.IdentityServer.Data.Migrations.IdentityServer.PersistedGrantDb
 {
     [DbContext(typeof(PersistedGrantDbContext))]
     partial class PersistedGrantDbContextModelSnapshot : ModelSnapshot

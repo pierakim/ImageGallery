@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Jozay.IDP.Data.Migrations.IdentityServer.PersistedGrantDb
+namespace ImageGallery.IdentityServer.Data.Migrations.IdentityServer.PersistedGrantDb
 {
     public partial class InitialIdentityServerPersistedGrantDbMigration : Migration
     {

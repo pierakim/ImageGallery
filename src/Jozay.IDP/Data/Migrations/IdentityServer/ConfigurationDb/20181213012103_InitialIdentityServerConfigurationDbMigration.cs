@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Jozay.IDP.Data.Migrations.IdentityServer.ConfigurationDb
+namespace ImageGallery.IdentityServer.Data.Migrations.IdentityServer.ConfigurationDb
 {
     public partial class InitialIdentityServerConfigurationDbMigration : Migration
     {

@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Jozay.IDP.Data.Migrations
+namespace ImageGallery.IdentityServer.Data.Migrations
 {
     public partial class InitApplication : Migration
     {

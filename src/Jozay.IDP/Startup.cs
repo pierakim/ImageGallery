@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Jozay.IDP
+namespace ImageGallery.IdentityServer
 {
     public class Startup
     {
@@ -20,7 +20,7 @@ namespace Jozay.IDP
         {
             services.AddMvc();
 
-            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=Jozay.IDP.DB;trusted_connection=yes;";
+            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
             services.AddDbContext<ApplicationDbContext>(builder =>

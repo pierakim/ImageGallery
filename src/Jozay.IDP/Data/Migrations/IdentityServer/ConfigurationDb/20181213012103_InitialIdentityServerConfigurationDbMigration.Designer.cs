@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Jozay.IDP.Data.Migrations.IdentityServer.ConfigurationDb
+namespace ImageGallery.IdentityServer.Data.Migrations.IdentityServer.ConfigurationDb
 {
     [DbContext(typeof(ConfigurationDbContext))]
     [Migration("20181213012103_InitialIdentityServerConfigurationDbMigration")]

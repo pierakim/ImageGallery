@@ -4,7 +4,7 @@ using IdentityServer4.Test;
 using System.Collections.Generic;
 using System.Security.Claims;
 
-namespace Jozay.IDP
+namespace ImageGallery.IdentityServer
 {
     public static class Config
     {

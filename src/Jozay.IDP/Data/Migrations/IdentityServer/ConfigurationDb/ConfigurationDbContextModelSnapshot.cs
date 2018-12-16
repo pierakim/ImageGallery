@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Jozay.IDP.Data.Migrations.IdentityServer.ConfigurationDb
+namespace ImageGallery.IdentityServer.Data.Migrations.IdentityServer.ConfigurationDb
 {
     [DbContext(typeof(ConfigurationDbContext))]
     partial class ConfigurationDbContextModelSnapshot : ModelSnapshot
