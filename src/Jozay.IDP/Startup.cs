@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
-using IdentityModel;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using Microsoft.AspNetCore.Builder;
