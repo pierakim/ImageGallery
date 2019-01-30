@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageGallery.API", "src\Ima
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageGallery.Model", "src\ImageGallery.Model\ImageGallery.Model.csproj", "{226B95C9-A9A6-4DF7-992C-A5945AF3AF0F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageGallery.IdentityServer", "src\Jozay.IDP\ImageGallery.IdentityServer.csproj", "{96C231C3-3D23-47F8-886C-D9CEAC653C03}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageGallery.IdentityServer", "src\ImageGallery.IdentityServer\ImageGallery.IdentityServer.csproj", "{96C231C3-3D23-47F8-886C-D9CEAC653C03}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
