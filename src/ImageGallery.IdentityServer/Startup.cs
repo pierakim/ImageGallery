@@ -19,6 +19,7 @@ namespace ImageGallery.IdentityServer
         {
             services.AddMvc();
 
+            //Database Configuration
             const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
@@ -26,6 +27,7 @@ namespace ImageGallery.IdentityServer
                 builder.UseSqlServer(connectionString,
                     sqlOptions => sqlOptions.MigrationsAssembly(migrationsAssembly)));
 
+            //Identity Password Configuration
             services.AddIdentity<IdentityUser, IdentityRole>(options => {
                 options.Password.RequireDigit = false;
                 options.Password.RequiredLength = 4;
@@ -186,9 +188,4 @@ namespace ImageGallery.IdentityServer
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
     }
-
-    //public class ApplicationUser : IdentityUser
-    //{
-
-    //}
 }
