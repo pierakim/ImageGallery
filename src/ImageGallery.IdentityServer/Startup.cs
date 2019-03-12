@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ImageGallery.IdentityServer
@@ -67,10 +69,23 @@ namespace ImageGallery.IdentityServer
             ConfigurationDbContext configurationDbContext)
         {
             //To initialise and seed database with the config from Config.cs
-            if (!applicationDbContext.Database.EnsureCreated() && !configurationDbContext.Database.EnsureCreated())
+            //Check if botth configuration and application context exist
+            var applicationDbContextExist = (applicationDbContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists();
+            var ConfigurationDbContextExist = (configurationDbContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists();
+
+            if (!applicationDbContextExist)
             {
-                InitializeDatabase(app);
+                //Create schema + seed users
+                InitializeAspNetUserDatabase(app);
+                SeedUserDatabase(app);
             }
+
+            if (!ConfigurationDbContextExist)
+            {
+                //create identity schema
+                InitializeIdentityDatabase(app);
+            }
+            
 
             if (env.IsDevelopment())
             {
@@ -82,17 +97,14 @@ namespace ImageGallery.IdentityServer
             app.UseMvcWithDefaultRoute();
         }
 
-        private void InitializeDatabase(IApplicationBuilder app)
+        private void InitializeIdentityDatabase(IApplicationBuilder app)
         {
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
+                //PersistedGrant
                 serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
 
-                //App Context
-                var contextApp = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                contextApp.Database.Migrate();
-
-                //Identity Context
+                //Identity Configuration Context
                 var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
                 context.Database.Migrate();
 
@@ -122,7 +134,23 @@ namespace ImageGallery.IdentityServer
                     }
                     context.SaveChanges();
                 }
+            }
+        }
 
+        private void InitializeAspNetUserDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                //App Context
+                var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.Migrate();
+            }
+        }
+
+        private void SeedUserDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
                 var userMgr = serviceScope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
                 var Frank = userMgr.FindByNameAsync("Frank").Result;
                 if (Frank == null)
@@ -196,8 +224,4 @@ namespace ImageGallery.IdentityServer
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
     }
 
-    //public class ApplicationUser : IdentityUser
-    //{
-
-    //}
 }
