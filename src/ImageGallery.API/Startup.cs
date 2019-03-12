@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -64,10 +66,15 @@ namespace ImageGallery.API
         public void Configure(IApplicationBuilder app, IHostingEnvironment env,
             ILoggerFactory loggerFactory, GalleryContext galleryContext)
         {
+
             //To initialise and seed database with the config from Config.cs
-            if (!galleryContext.Database.EnsureCreated())
+            //Check if botth configuration and application context exist
+            //Is it better to do this in Main?
+            var GalleryContextExist = (galleryContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists();
+
+            if (!GalleryContextExist)
             {
-                InitializeDatabase(app);
+                InitializeGalleryDatabase(app);
             }
 
             if (env.IsDevelopment())
@@ -116,12 +123,13 @@ namespace ImageGallery.API
             app.UseMvc();
         }
 
-        private void InitializeDatabase(IApplicationBuilder app)
+        private void InitializeGalleryDatabase(IApplicationBuilder app)
         {
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 var contextApp = serviceScope.ServiceProvider.GetRequiredService<GalleryContext>();
                 contextApp.Database.Migrate();
+                contextApp.EnsureSeedDataForContext();
             }
         }
     }
