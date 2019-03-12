@@ -21,7 +21,7 @@ namespace ImageGallery.API
         {
             Configuration = configuration;
         }
-        
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -49,7 +49,7 @@ namespace ImageGallery.API
                     options.ApiName = "imagegalleryapi";
                     options.ApiSecret = "apisecret";
                 });
-        
+
             // register the DbContext on the container, getting the connection string from
             // appSettings (note: use this during development; in a production environment,
             // it's better to store the connection string in an environment variable)
@@ -61,9 +61,15 @@ namespace ImageGallery.API
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, 
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
             ILoggerFactory loggerFactory, GalleryContext galleryContext)
         {
+            //To initialise and seed database with the config from Config.cs
+            if (!galleryContext.Database.EnsureCreated())
+            {
+                InitializeDatabase(app);
+            }
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -105,9 +111,18 @@ namespace ImageGallery.API
                     .ForMember(m => m.OwnerId, options => options.Ignore());
             });
 
-            AutoMapper.Mapper.AssertConfigurationIsValid();            
+            AutoMapper.Mapper.AssertConfigurationIsValid();
 
-            app.UseMvc(); 
+            app.UseMvc();
+        }
+
+        private void InitializeDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var contextApp = serviceScope.ServiceProvider.GetRequiredService<GalleryContext>();
+                contextApp.Database.Migrate();
+            }
         }
     }
 }

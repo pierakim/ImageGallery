@@ -63,10 +63,14 @@ namespace ImageGallery.IdentityServer
             //.AddInMemoryClients(Config.GetClients());
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext applicationDbContext,
+            ConfigurationDbContext configurationDbContext)
         {
             //To initialise and seed database with the config from Config.cs
-            //InitializeDatabase(app);
+            if (!applicationDbContext.Database.EnsureCreated() && !configurationDbContext.Database.EnsureCreated())
+            {
+                InitializeDatabase(app);
+            }
 
             if (env.IsDevelopment())
             {
@@ -84,6 +88,11 @@ namespace ImageGallery.IdentityServer
             {
                 serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
 
+                //App Context
+                var contextApp = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                contextApp.Database.Migrate();
+
+                //Identity Context
                 var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
                 context.Database.Migrate();
 
