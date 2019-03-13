@@ -8,7 +8,7 @@ namespace ImageGallery.IdentityServer.ServiceBus
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("IdentityServer - Sender");
+            Console.WriteLine("IdentityServer Service Bus - Sender");
 
             var factory = new ConnectionFactory()
             {
@@ -22,18 +22,17 @@ namespace ImageGallery.IdentityServer.ServiceBus
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queue: "msgKey",
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
+                //Declare the exchange
+                channel.ExchangeDeclare(exchange: "logs", type: "fanout");
 
+                //Our Message
                 Console.WriteLine("Enter message to send");
                 var msg = Console.ReadLine();
                 var body = Encoding.UTF8.GetBytes(msg);
 
-                channel.BasicPublish(exchange: "",
-                                     routingKey: "msgKey",
+                //Publish to the exchange
+                channel.BasicPublish(exchange: "logs",
+                                     routingKey: "",
                                      basicProperties: null,
                                      body: body);
 
@@ -41,6 +40,8 @@ namespace ImageGallery.IdentityServer.ServiceBus
 
                 Console.WriteLine(" Press [enter] to exit.");
                 Console.ReadLine();
+
+
             }
         }
     }
