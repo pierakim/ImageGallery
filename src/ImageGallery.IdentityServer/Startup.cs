@@ -5,7 +5,8 @@ using System.Security.Claims;
 using GreenPipes;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
-using ImageGallery.IdentityServer.Messages;
+using ImageGallery.BusService;
+//using ImageGallery.IdentityServer.Messages;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -241,7 +242,7 @@ namespace ImageGallery.IdentityServer
                 }));
 
             services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
-            services.AddSingleton<IHostedService, BusService>();
+            services.AddSingleton<IHostedService, ImageGallery.BusService.BusService>();
         }
 
     }

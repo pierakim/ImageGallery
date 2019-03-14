@@ -4,7 +4,6 @@ using ImageGallery.API.Authorization;
 using ImageGallery.API.Entities;
 using ImageGallery.API.Messages;
 using ImageGallery.API.Services;
-using ImageGallery.IdentityServer.Messages;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -169,7 +168,7 @@ namespace ImageGallery.API
                 }));
 
             services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
-            services.AddSingleton<IHostedService, BusService>();
+            services.AddSingleton<IHostedService, ImageGallery.BusService.BusService>();
         }
     }
 }
