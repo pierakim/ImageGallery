@@ -9,6 +9,7 @@ using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using ImageGallery.IdentityServer.Messages;
+using ImageGallery.Model;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -123,7 +124,7 @@ namespace IdentityServer4.Quickstart.UI
                 await _bus.Publish<Message>(
                     new
                     {
-                        Value = "ModelState.IsValid!"
+                        Value = "I am coming from IdentityServer!"
                     });
 
 

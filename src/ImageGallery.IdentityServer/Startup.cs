@@ -230,13 +230,6 @@ namespace ImageGallery.IdentityServer
 
         private void ConfigureMassTransitRabbitMQ(IServiceCollection services)
         {
-            //DI for SendMessageConsumer
-            services.AddScoped<SendMessageConsumer>();
-            services.AddMassTransit(c =>
-            {
-                c.AddConsumer<SendMessageConsumer>();
-            });
-
             services.AddSingleton(provider => Bus.Factory.CreateUsingRabbitMq(
                 cfg =>
                 {
@@ -244,15 +237,6 @@ namespace ImageGallery.IdentityServer
                     {
                         h.Username("guest");
                         h.Password("guest");
-                    });
-
-                    cfg.ReceiveEndpoint(host, "TestQueue", e =>
-                    {
-                        e.PrefetchCount = 16;
-                        e.UseMessageRetry(x => x.Interval(2, 100));
-                        e.LoadFrom(provider);
-
-                        EndpointConvention.Map<SendMessageConsumer>(e.InputAddress);
                     });
                 }));
 

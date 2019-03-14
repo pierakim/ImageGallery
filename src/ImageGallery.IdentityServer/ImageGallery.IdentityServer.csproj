@@ -23,4 +23,8 @@
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.1.3-rtm-32065" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ImageGallery.Model\ImageGallery.Model.csproj" />
+  </ItemGroup>
+
 </Project>
