@@ -8,6 +8,8 @@ using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
+using ImageGallery.IdentityServer.Messages;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -36,13 +38,16 @@ namespace IdentityServer4.Quickstart.UI
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
 
+        private readonly IBus _bus;
+
         public AccountController(
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
             UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            SignInManager<IdentityUser> signInManager,
+            IBus bus)
             //TestUserStore users = null)
         {
             // if the TestUserStore is not in DI, then we'll just use the global users collection
@@ -55,6 +60,7 @@ namespace IdentityServer4.Quickstart.UI
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
+            _bus = bus;
         }
 
         /// <summary>
@@ -114,6 +120,13 @@ namespace IdentityServer4.Quickstart.UI
 
             if (ModelState.IsValid)
             {
+                await _bus.Publish<Message>(
+                    new
+                    {
+                        Value = "ModelState.IsValid!"
+                    });
+
+
                 // validate username/password against in-memory store
                 //if (_userManager.ValidateCredentials(model.Username, model.Password))
                 var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);

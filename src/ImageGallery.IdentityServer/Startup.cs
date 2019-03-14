@@ -2,8 +2,11 @@
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
+using GreenPipes;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
+using ImageGallery.IdentityServer.Messages;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace ImageGallery.IdentityServer
 {
@@ -63,9 +67,38 @@ namespace ImageGallery.IdentityServer
             //.AddInMemoryIdentityResources(Config.GetIdentityResources())
             //.AddInMemoryApiResources(Config.GetApiResources())
             //.AddInMemoryClients(Config.GetClients());
+
+            //DI for SendMessageConsumer
+            services.AddScoped<SendMessageConsumer>();
+            services.AddMassTransit(c =>
+            {
+                c.AddConsumer<SendMessageConsumer>();
+            });
+
+            services.AddSingleton(provider => Bus.Factory.CreateUsingRabbitMq(
+                cfg =>
+                {
+                    var host = cfg.Host("192.168.99.100", "/", h =>
+                    {
+                        h.Username("guest");
+                        h.Password("guest");
+                    });
+
+                    cfg.ReceiveEndpoint(host, "web-service-endpoint", e =>
+                    {
+                        e.PrefetchCount = 16;
+                        e.UseMessageRetry(x => x.Interval(2, 100));
+                        e.LoadFrom(provider);
+
+                        EndpointConvention.Map<SendMessageConsumer>(e.InputAddress);
+                    });
+                }));
+
+            services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
+            services.AddSingleton<IHostedService, BusService>();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext applicationDbContext,
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ApplicationDbContext applicationDbContext,
             ConfigurationDbContext configurationDbContext)
         {
             //To initialise and seed database with the config from Config.cs
