@@ -241,7 +241,14 @@ namespace ImageGallery.IdentityServer
                     });
                 }));
 
+            //Register Publish Endpoint of RabbitMQ bus service
+            services.AddSingleton<IPublishEndpoint>(provider => provider.GetRequiredService<IBusControl>());
+            //Register Send Endpoint of RabbitMQ bus service
+            services.AddSingleton<ISendEndpointProvider>(provider => provider.GetRequiredService<IBusControl>());
+            //Register Bus control for RabbitMQ
             services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
+
+            //Register Bus Service hosting
             services.AddSingleton<IHostedService, ImageGallery.BusService.BusService>();
         }
 
