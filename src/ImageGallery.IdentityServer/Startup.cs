@@ -6,6 +6,7 @@ using GreenPipes;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using ImageGallery.BusService;
+using ImageGallery.IdentityServer.Services;
 //using ImageGallery.IdentityServer.Messages;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
@@ -227,6 +228,8 @@ namespace ImageGallery.IdentityServer
             //.AddInMemoryIdentityResources(Config.GetIdentityResources())
             //.AddInMemoryApiResources(Config.GetApiResources())
             //.AddInMemoryClients(Config.GetClients());
+
+            services.AddTransient<ILoginService<IdentityUser>, EFLoginService>();
         }
 
         private void ConfigureMassTransitRabbitMQ(IServiceCollection services)

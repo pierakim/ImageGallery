@@ -8,6 +8,7 @@ using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
+using ImageGallery.IdentityServer.Services;
 using ImageGallery.Model;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
@@ -38,6 +39,8 @@ namespace IdentityServer4.Quickstart.UI
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
 
+        private readonly ILoginService<IdentityUser> _loginService;
+
         private readonly IBus _bus;
 
         public AccountController(
@@ -47,7 +50,8 @@ namespace IdentityServer4.Quickstart.UI
             IEventService events,
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            IBus bus)
+            IBus bus,
+            ILoginService<IdentityUser> loginService)
             //TestUserStore users = null)
         {
             // if the TestUserStore is not in DI, then we'll just use the global users collection
@@ -61,6 +65,7 @@ namespace IdentityServer4.Quickstart.UI
             _schemeProvider = schemeProvider;
             _events = events;
             _bus = bus;
+            _loginService = loginService;
         }
 
         /// <summary>
@@ -69,6 +74,9 @@ namespace IdentityServer4.Quickstart.UI
         [HttpGet]
         public async Task<IActionResult> Login(string returnUrl)
         {
+            if (returnUrl == null)
+                returnUrl = "https://localhost:44346/";
+
             // build a model so we know what to show on the login page
             var vm = await BuildLoginViewModelAsync(returnUrl);
 
@@ -88,6 +96,7 @@ namespace IdentityServer4.Quickstart.UI
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginInputModel model, string button)
         {
+
             // check if we are in the context of an authorization request
             var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
 
@@ -120,71 +129,51 @@ namespace IdentityServer4.Quickstart.UI
 
             if (ModelState.IsValid)
             {
-                await _bus.Publish<Message>(
-                    new
-                    {
-                        Value = "I am coming from IdentityServer!"
-                    });
+                //await _bus.Publish<Message>(
+                //    new
+                //    {
+                //        Value = "I am coming from IdentityServer!"
+                //    });
 
+                var user = await _loginService.FindByUsername(model.Username);
 
-                // validate username/password against in-memory store
-                //if (_userManager.ValidateCredentials(model.Username, model.Password))
-                var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
-                if (result.Succeeded)
+                if (await _loginService.ValidateCredentials(user, model.Password))
                 {
-                    var user = await _userManager.FindByNameAsync(model.Username);
-                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
+                    var props = new AuthenticationProperties
+                    {
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2),
+                        AllowRefresh = true,
+                        RedirectUri = model.ReturnUrl
+                    };
 
-                    // only set explicit expiration here if user chooses "remember me". 
-                    // otherwise we rely upon expiration configured in cookie middleware.
-                    AuthenticationProperties props = null;
-                    if (AccountOptions.AllowRememberLogin && model.RememberLogin)
+                    if (model.RememberLogin)
                     {
                         props = new AuthenticationProperties
                         {
                             IsPersistent = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddYears(10)
                         };
                     };
 
-                    // issue authentication cookie with subject ID and username
-                    await HttpContext.SignInAsync(user.Id, user.UserName, props);
+                    await _loginService.SignInAsync(user, props);
 
-                    if (context != null)
+                    // make sure the returnUrl is still valid, and if yes - redirect back to authorize endpoint
+                    if (_interaction.IsValidReturnUrl(model.ReturnUrl))
                     {
-                        if (await _clientStore.IsPkceClientAsync(context.ClientId))
-                        {
-                            // if the client is PKCE then we assume it's native, so this change in how to
-                            // return the response is for better UX for the end user.
-                            return View("Redirect", new RedirectViewModel { RedirectUrl = model.ReturnUrl });
-                        }
-
-                        // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
                         return Redirect(model.ReturnUrl);
                     }
 
-                    // request for a local page
-                    if (Url.IsLocalUrl(model.ReturnUrl))
-                    {
-                        return Redirect(model.ReturnUrl);
-                    }
-                    else if (string.IsNullOrEmpty(model.ReturnUrl))
-                    {
-                        return Redirect("~/");
-                    }
-                    else
-                    {
-                        // user might have clicked on a malicious link - should be logged
-                        throw new Exception("invalid return URL");
-                    }
+                    return Redirect("~/");
                 }
 
-                await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials"));
-                ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
+                ModelState.AddModelError("", "Invalid username or password.");
             }
 
             // something went wrong, show form with error
             var vm = await BuildLoginViewModelAsync(model);
+
+            ViewData["ReturnUrl"] = model.ReturnUrl;
+
             return View(vm);
         }
 
@@ -247,10 +236,56 @@ namespace IdentityServer4.Quickstart.UI
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Register(string returnUrl = null)
+        public IActionResult Register(string returnUrl)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View();
+        }
+
+        // POST: /Account/Register
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            if (ModelState.IsValid)
+            {
+                var user = new IdentityUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Errors.Count() > 0)
+                {
+                    AddErrors(result);
+                    // If we got this far, something failed, redisplay form
+                    return View(model);
+                }
+
+                if (returnUrl != null)
+                {
+                    if (HttpContext.User.Identity.IsAuthenticated)
+                        return Redirect(returnUrl);
+                    else
+                        if (ModelState.IsValid)
+                        return RedirectToAction("login", "account", new { returnUrl = returnUrl });
+                    else
+                        return View(model);
+                }
+            }
+            return RedirectToAction("index", "home");
+        }
+
+
+        private void AddErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
         }
 
 
