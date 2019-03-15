@@ -2,12 +2,9 @@
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
-using GreenPipes;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
-using ImageGallery.BusService;
 using ImageGallery.IdentityServer.Services;
-//using ImageGallery.IdentityServer.Messages;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,7 +24,14 @@ namespace ImageGallery.IdentityServer
         {
             services.AddMvc();
 
-            this.ConfigureIdentity(services);
+            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
+            //Identity Server
+            this.ConfigureIdentityServer(services, connectionString, migrationsAssembly);
+            //AspNet Core Identity
+            this.ConfigureAspNetIdentity(services, connectionString, migrationsAssembly);
+            //MassTransit + RabbitMQ
             this.ConfigureMassTransitRabbitMQ(services);
         }
 
@@ -184,11 +188,8 @@ namespace ImageGallery.IdentityServer
             }
         }
 
-        private void ConfigureIdentity(IServiceCollection services)
+        private void ConfigureAspNetIdentity(IServiceCollection services, string connectionString, string migrationsAssembly)
         {
-            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
-            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-
             services.AddDbContext<ApplicationDbContext>(builder =>
                 builder.UseSqlServer(connectionString,
                     sqlOptions => sqlOptions.MigrationsAssembly(migrationsAssembly)));
@@ -203,6 +204,11 @@ namespace ImageGallery.IdentityServer
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            services.AddTransient<ILoginService<IdentityUser>, EFLoginService>();
+        }
+
+        private void ConfigureIdentityServer(IServiceCollection services, string connectionString, string migrationsAssembly)
+        {
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
                 //.AddTestUsers(Config.GetUsers())
