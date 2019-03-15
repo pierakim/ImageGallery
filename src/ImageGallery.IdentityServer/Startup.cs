@@ -2,8 +2,12 @@
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
+using GreenPipes;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
+using ImageGallery.BusService;
+//using ImageGallery.IdentityServer.Messages;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace ImageGallery.IdentityServer
 {
@@ -21,51 +26,11 @@ namespace ImageGallery.IdentityServer
         {
             services.AddMvc();
 
-            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
-            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-
-            services.AddDbContext<ApplicationDbContext>(builder =>
-                builder.UseSqlServer(connectionString,
-                    sqlOptions => sqlOptions.MigrationsAssembly(migrationsAssembly)));
-
-            services.AddIdentity<IdentityUser, IdentityRole>(options => {
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 4;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
-            services.AddIdentityServer()
-                .AddDeveloperSigningCredential()
-                //.AddTestUsers(Config.GetUsers())
-                .AddAspNetIdentity<IdentityUser>()
-                // this adds the config data from DB (clients, resources)
-                .AddConfigurationStore(options =>
-                {
-                    options.ConfigureDbContext = builder =>
-                        builder.UseSqlServer(connectionString,
-                            sql => sql.MigrationsAssembly(migrationsAssembly));
-                })
-                // this adds the operational data from DB (codes, tokens, consents)
-                .AddOperationalStore(options =>
-                {
-                    options.ConfigureDbContext = builder =>
-                        builder.UseSqlServer(connectionString,
-                            sql => sql.MigrationsAssembly(migrationsAssembly));
-
-                    // this enables automatic token cleanup. this is optional.
-                    options.EnableTokenCleanup = true;
-                    options.TokenCleanupInterval = 30;
-                });
-            //.AddInMemoryIdentityResources(Config.GetIdentityResources())
-            //.AddInMemoryApiResources(Config.GetApiResources())
-            //.AddInMemoryClients(Config.GetClients());
+            this.ConfigureIdentity(services);
+            this.ConfigureMassTransitRabbitMQ(services);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext applicationDbContext,
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ApplicationDbContext applicationDbContext,
             ConfigurationDbContext configurationDbContext)
         {
             //To initialise and seed database with the config from Config.cs
@@ -217,6 +182,76 @@ namespace ImageGallery.IdentityServer
                 }
             }
         }
+
+        private void ConfigureIdentity(IServiceCollection services)
+        {
+            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
+            services.AddDbContext<ApplicationDbContext>(builder =>
+                builder.UseSqlServer(connectionString,
+                    sqlOptions => sqlOptions.MigrationsAssembly(migrationsAssembly)));
+
+            services.AddIdentity<IdentityUser, IdentityRole>(options => {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 4;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+            })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.AddIdentityServer()
+                .AddDeveloperSigningCredential()
+                //.AddTestUsers(Config.GetUsers())
+                .AddAspNetIdentity<IdentityUser>()
+                // this adds the config data from DB (clients, resources)
+                .AddConfigurationStore(options =>
+                {
+                    options.ConfigureDbContext = builder =>
+                        builder.UseSqlServer(connectionString,
+                            sql => sql.MigrationsAssembly(migrationsAssembly));
+                })
+                // this adds the operational data from DB (codes, tokens, consents)
+                .AddOperationalStore(options =>
+                {
+                    options.ConfigureDbContext = builder =>
+                        builder.UseSqlServer(connectionString,
+                            sql => sql.MigrationsAssembly(migrationsAssembly));
+
+                    // this enables automatic token cleanup. this is optional.
+                    options.EnableTokenCleanup = true;
+                    options.TokenCleanupInterval = 30;
+                });
+            //.AddInMemoryIdentityResources(Config.GetIdentityResources())
+            //.AddInMemoryApiResources(Config.GetApiResources())
+            //.AddInMemoryClients(Config.GetClients());
+        }
+
+        private void ConfigureMassTransitRabbitMQ(IServiceCollection services)
+        {
+            services.AddSingleton(provider => Bus.Factory.CreateUsingRabbitMq(
+                cfg =>
+                {
+                    var host = cfg.Host("192.168.99.100", "/", h =>
+                    {
+                        h.Username("guest");
+                        h.Password("guest");
+                    });
+                }));
+
+            //Register Publish Endpoint of RabbitMQ bus service
+            services.AddSingleton<IPublishEndpoint>(provider => provider.GetRequiredService<IBusControl>());
+            //Register Send Endpoint of RabbitMQ bus service
+            services.AddSingleton<ISendEndpointProvider>(provider => provider.GetRequiredService<IBusControl>());
+            //Register Bus control for RabbitMQ
+            services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
+
+            //Register Bus Service hosting
+            services.AddSingleton<IHostedService, ImageGallery.BusService.BusService>();
+        }
+
     }
 
     public class ApplicationDbContext : IdentityDbContext

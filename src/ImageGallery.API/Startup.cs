@@ -1,7 +1,10 @@
-﻿using IdentityServer4.AccessTokenValidation;
+﻿using GreenPipes;
+using IdentityServer4.AccessTokenValidation;
 using ImageGallery.API.Authorization;
 using ImageGallery.API.Entities;
+using ImageGallery.API.Messages;
 using ImageGallery.API.Services;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,6 +14,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace ImageGallery.API
@@ -29,6 +33,8 @@ namespace ImageGallery.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            this.ConfigureMassTransitRabbitMQ(services);
 
             services.AddAuthorization(authorizationOptions =>
             {
@@ -63,7 +69,7 @@ namespace ImageGallery.API
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env,
             ILoggerFactory loggerFactory, GalleryContext galleryContext)
         {
 
@@ -131,6 +137,45 @@ namespace ImageGallery.API
                 contextApp.Database.Migrate();
                 contextApp.EnsureSeedDataForContext();
             }
+        }
+
+        private void ConfigureMassTransitRabbitMQ(IServiceCollection services)
+        {
+            //DI for SendMessageConsumer
+            services.AddScoped<Messages.SendMessageConsumer>();
+            services.AddMassTransit(c =>
+            {
+                c.AddConsumer<Messages.SendMessageConsumer>();
+            });
+
+            services.AddSingleton(provider => Bus.Factory.CreateUsingRabbitMq(
+                cfg =>
+                {
+                    var host = cfg.Host("192.168.99.100", "/", h =>
+                    {
+                        h.Username("guest");
+                        h.Password("guest");
+                    });
+
+                    cfg.ReceiveEndpoint(host, "TestQueue", e =>
+                    {
+                        e.PrefetchCount = 16;
+                        e.UseMessageRetry(x => x.Interval(2, 100));
+                        e.LoadFrom(provider);
+
+                        EndpointConvention.Map<Messages.SendMessageConsumer>(e.InputAddress);
+                    });
+                }));
+
+            //Register Publish Endpoint of RabbitMQ bus service
+            services.AddSingleton<IPublishEndpoint>(provider => provider.GetRequiredService<IBusControl>());
+            //Register Send Endpoint of RabbitMQ bus service
+            services.AddSingleton<ISendEndpointProvider>(provider => provider.GetRequiredService<IBusControl>());
+            //Register Bus control for RabbitMQ
+            services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
+
+            //Register Bus Service hosting
+            services.AddSingleton<IHostedService, ImageGallery.BusService.BusService>();
         }
     }
 }
