@@ -15,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageGallery.Model", "src\I
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageGallery.IdentityServer", "src\ImageGallery.IdentityServer\ImageGallery.IdentityServer.csproj", "{96C231C3-3D23-47F8-886C-D9CEAC653C03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageGallery.IdentityServer.ServiceBus", "ImageGallery.IdentityServer.ServiceBus\ImageGallery.IdentityServer.ServiceBus.csproj", "{B056CDBE-E0D9-4287-926B-A03023EE1544}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageGallery.IdentityServer.ServiceBus", "src\ImageGallery.IdentityServer.ServiceBus\ImageGallery.IdentityServer.ServiceBus.csproj", "{B056CDBE-E0D9-4287-926B-A03023EE1544}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageGallery.API.ServiceBus", "ImageGallery.API.ServiceBus\ImageGallery.API.ServiceBus.csproj", "{FE67C547-8EE1-4D40-9BE2-6BD25CB04497}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageGallery.API.ServiceBus", "src\ImageGallery.API.ServiceBus\ImageGallery.API.ServiceBus.csproj", "{FE67C547-8EE1-4D40-9BE2-6BD25CB04497}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
