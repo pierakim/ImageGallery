@@ -2,11 +2,8 @@
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
-using GreenPipes;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
-using ImageGallery.BusService;
-//using ImageGallery.IdentityServer.Messages;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
