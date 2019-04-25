@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ImageGallery.BusService\ImageGallery.BusService.csproj" />
     <ProjectReference Include="..\ImageGallery.IdentityServer\ImageGallery.IdentityServer.csproj" />
     <ProjectReference Include="..\ImageGallery.Model\ImageGallery.Model.csproj" />
   </ItemGroup>
