@@ -27,10 +27,10 @@ namespace ImageGallery.IdentityServer
             const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
-            //Identity Server
-            this.ConfigureIdentityServer(services, connectionString, migrationsAssembly);
             //AspNet Core Identity
             this.ConfigureAspNetIdentity(services, connectionString, migrationsAssembly);
+            //Identity Server
+            this.ConfigureIdentityServer(services, connectionString, migrationsAssembly);
             //MassTransit + RabbitMQ
             this.ConfigureMassTransitRabbitMQ(services);
         }
@@ -234,8 +234,6 @@ namespace ImageGallery.IdentityServer
             //.AddInMemoryIdentityResources(Config.GetIdentityResources())
             //.AddInMemoryApiResources(Config.GetApiResources())
             //.AddInMemoryClients(Config.GetClients());
-
-            services.AddTransient<ILoginService<IdentityUser>, EFLoginService>();
         }
 
         private void ConfigureMassTransitRabbitMQ(IServiceCollection services)
