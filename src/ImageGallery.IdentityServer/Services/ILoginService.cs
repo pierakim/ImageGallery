@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,9 @@ namespace ImageGallery.IdentityServer.Services
         Task SignIn(T user);
 
         Task SignInAsync(T user, AuthenticationProperties properties, string authenticationMethod = null);
+
+        Task SignOutAsync();
+
+        Task<IdentityResult> CreateAsync(T user, string password);
     }
 }

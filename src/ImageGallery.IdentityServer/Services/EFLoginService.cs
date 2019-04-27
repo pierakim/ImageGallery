@@ -42,5 +42,15 @@ namespace ImageGallery.IdentityServer.Services
         {
             return _signInManager.SignInAsync(user, properties, authenticationMethod);
         }
+
+        public Task SignOutAsync()
+        {
+            return  _signInManager.SignOutAsync();
+        }
+
+        public Task<IdentityResult> CreateAsync(IdentityUser user, string password)
+        {
+            return _userManager.CreateAsync(user, password);
+        }
     }
 }

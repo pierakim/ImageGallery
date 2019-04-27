@@ -1,7 +1,6 @@
 // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-
 using IdentityModel;
 using IdentityServer4.Events;
 using IdentityServer4.Extensions;
@@ -9,7 +8,6 @@ using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using ImageGallery.IdentityServer.Services;
-using ImageGallery.Model;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -32,8 +30,6 @@ namespace IdentityServer4.Quickstart.UI
     public class AccountController : Controller
     {
         //private readonly TestUserStore _users;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
@@ -48,18 +44,14 @@ namespace IdentityServer4.Quickstart.UI
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
-            UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             IBus bus,
             ILoginService<IdentityUser> loginService)
-            //TestUserStore users = null)
         {
             // if the TestUserStore is not in DI, then we'll just use the global users collection
             // this is where you would plug in your own custom identity management library (e.g. ASP.NET Identity)
             //_users = users ?? new TestUserStore(TestUsers.Users);
 
-            _signInManager = signInManager;
-            _userManager = userManager;
             _interaction = interaction;
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
@@ -129,6 +121,7 @@ namespace IdentityServer4.Quickstart.UI
 
             if (ModelState.IsValid)
             {
+                //For ServiceBus Tests
                 //await _bus.Publish<Message>(
                 //    new
                 //    {
@@ -212,8 +205,7 @@ namespace IdentityServer4.Quickstart.UI
                 // delete local authentication cookie
                 //await HttpContext.SignOutAsync();
                 // when you're using ASP.NET Identity they wire up internally their own cookie scheme, so you need to use their API to revoke their cookie as well.
-                await _signInManager.SignOutAsync();
-
+                await _loginService.SignOutAsync();
                 // raise the logout event
                 await _events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));
             }
@@ -257,7 +249,8 @@ namespace IdentityServer4.Quickstart.UI
                     Email = model.Email,
                 };
 
-                var result = await _userManager.CreateAsync(user, model.Password);
+                var result = await _loginService.CreateAsync(user, model.Password);
+
                 if (result.Errors.Count() > 0)
                 {
                     AddErrors(result);
@@ -287,7 +280,6 @@ namespace IdentityServer4.Quickstart.UI
                 ModelState.AddModelError(string.Empty, error.Description);
             }
         }
-
 
 
         /*****************************************/
