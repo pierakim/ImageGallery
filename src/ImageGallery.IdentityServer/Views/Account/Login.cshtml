@@ -44,7 +44,7 @@
                             </fieldset>
                         </form>
                         <div class="form-group">
-                            <a asp-area="" asp-controller="Account" asp-action="Register">Register a new user</a>
+                            <a asp-area="" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">Register a new user</a>
                         </div>
                     </div>
                 </div>
