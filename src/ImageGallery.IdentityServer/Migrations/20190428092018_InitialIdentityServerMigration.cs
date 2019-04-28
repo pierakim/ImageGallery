@@ -2,9 +2,9 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ImageGallery.IdentityServer.Data.Migrations
+namespace ImageGallery.IdentityServer.Migrations
 {
-    public partial class InitApplication : Migration
+    public partial class InitialIdentityServerMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
