@@ -24,13 +24,14 @@ namespace ImageGallery.IdentityServer
         {
             services.AddMvc();
 
-            const string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
+            const string identityServerConnectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
+            const string aspNetIdentityconnectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.AspIdentityProvider.DB;trusted_connection=yes;";
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
             //AspNet Core Identity
-            this.ConfigureAspNetIdentity(services, connectionString, migrationsAssembly);
+            this.ConfigureAspNetIdentity(services, aspNetIdentityconnectionString, migrationsAssembly);
             //Identity Server
-            this.ConfigureIdentityServer(services, connectionString, migrationsAssembly);
+            this.ConfigureIdentityServer(services, identityServerConnectionString, migrationsAssembly);
             //MassTransit + RabbitMQ
             this.ConfigureMassTransitRabbitMQ(services);
         }
