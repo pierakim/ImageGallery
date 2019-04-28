@@ -4,12 +4,12 @@ using System.Reflection;
 using System.Security.Claims;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
+using ImageGallery.IdentityServer.DbContexts;
 using ImageGallery.IdentityServer.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -56,7 +56,6 @@ namespace ImageGallery.IdentityServer
                 //create identity schema
                 InitializeIdentityDatabase(app);
             }
-            
 
             if (env.IsDevelopment())
             {
@@ -261,10 +260,4 @@ namespace ImageGallery.IdentityServer
         }
 
     }
-
-    public class ApplicationDbContext : IdentityDbContext
-    {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-    }
-
 }
