@@ -256,7 +256,7 @@ namespace ImageGallery.IdentityServer
             services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
 
             //Register Bus Service hosting
-            services.AddSingleton<IHostedService, ImageGallery.BusService.BusService>();
+            services.AddSingleton<IHostedService, ServiceBus.ServiceBus>();
         }
 
     }

@@ -8,6 +8,7 @@ using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using ImageGallery.IdentityServer.Services;
+using ImageGallery.Model;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -122,11 +123,11 @@ namespace IdentityServer4.Quickstart.UI
             if (ModelState.IsValid)
             {
                 //For ServiceBus Tests
-                //await _bus.Publish<Message>(
-                //    new
-                //    {
-                //        Value = "I am coming from IdentityServer!"
-                //    });
+                await _bus.Publish<Message>(
+                    new
+                    {
+                        Value = "I am coming from IdentityServer!"
+                    });
 
                 var user = await _loginService.FindByUsername(model.Username);
 
