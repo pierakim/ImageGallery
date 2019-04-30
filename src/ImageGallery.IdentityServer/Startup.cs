@@ -29,7 +29,9 @@ namespace ImageGallery.IdentityServer
             services.ConfigureMassTransitRabbitMQ();
         }
 
-        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ApplicationDbContext applicationDbContext,
+        public void Configure(IApplicationBuilder app, 
+            Microsoft.AspNetCore.Hosting.IHostingEnvironment env, 
+            ApplicationDbContext applicationDbContext,
             ConfigurationDbContext configurationDbContext)
         {
             //To initialise and seed database with the config from Config.cs

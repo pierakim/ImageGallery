@@ -1,10 +1,7 @@
-﻿using GreenPipes;
-using IdentityServer4.AccessTokenValidation;
-using ImageGallery.API.Authorization;
+﻿using ImageGallery.API.Authorization;
 using ImageGallery.API.Entities;
-using ImageGallery.API.Messages;
+using ImageGallery.API.Extensions;
 using ImageGallery.API.Services;
-using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -34,29 +31,13 @@ namespace ImageGallery.API
         {
             services.AddMvc();
 
-            this.ConfigureMassTransitRabbitMQ(services);
+            services.ConfigureMassTransitRabbitMQ();
 
-            services.AddAuthorization(authorizationOptions =>
-            {
-                authorizationOptions.AddPolicy(
-                    "MustOwnImage",
-                    policyBuilder =>
-                    {
-                        policyBuilder.RequireAuthenticatedUser();
-                        policyBuilder.AddRequirements(new MustOwnImageRequirement());
-                    });
-            });
+            services.AddMustOwnImageAuthorization();
 
             services.AddScoped<IAuthorizationHandler, MustOwnImageHandler>();
 
-            services.AddAuthentication(
-                IdentityServerAuthenticationDefaults.AuthenticationScheme)
-                .AddIdentityServerAuthentication(options =>
-                {
-                    options.Authority = "https://localhost:44364/";
-                    options.ApiName = "imagegalleryapi";
-                    options.ApiSecret = "apisecret";
-                });
+            services.AddIS4ApiAuthentication();
 
             // register the DbContext on the container, getting the connection string from
             // appSettings (note: use this during development; in a production environment,
@@ -80,7 +61,7 @@ namespace ImageGallery.API
 
             if (!GalleryContextExist)
             {
-                InitializeGalleryDatabase(app);
+                app.InitializeGalleryDatabase();
             }
 
             if (env.IsDevelopment())
@@ -127,55 +108,6 @@ namespace ImageGallery.API
             AutoMapper.Mapper.AssertConfigurationIsValid();
 
             app.UseMvc();
-        }
-
-        private void InitializeGalleryDatabase(IApplicationBuilder app)
-        {
-            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
-            {
-                var contextApp = serviceScope.ServiceProvider.GetRequiredService<GalleryContext>();
-                contextApp.Database.Migrate();
-                contextApp.EnsureSeedDataForContext();
-            }
-        }
-
-        private void ConfigureMassTransitRabbitMQ(IServiceCollection services)
-        {
-            //DI for SendMessageConsumer
-            services.AddScoped<Messages.SendMessageConsumer>();
-            services.AddMassTransit(c =>
-            {
-                c.AddConsumer<Messages.SendMessageConsumer>();
-            });
-
-            services.AddSingleton(provider => Bus.Factory.CreateUsingRabbitMq(
-                cfg =>
-                {
-                    var host = cfg.Host("192.168.99.100", "/", h =>
-                    {
-                        h.Username("guest");
-                        h.Password("guest");
-                    });
-
-                    cfg.ReceiveEndpoint(host, "TestQueue", e =>
-                    {
-                        e.PrefetchCount = 16;
-                        e.UseMessageRetry(x => x.Interval(2, 100));
-                        e.LoadFrom(provider);
-
-                        EndpointConvention.Map<Messages.SendMessageConsumer>(e.InputAddress);
-                    });
-                }));
-
-            //Register Publish Endpoint of RabbitMQ bus service
-            services.AddSingleton<IPublishEndpoint>(provider => provider.GetRequiredService<IBusControl>());
-            //Register Send Endpoint of RabbitMQ bus service
-            services.AddSingleton<ISendEndpointProvider>(provider => provider.GetRequiredService<IBusControl>());
-            //Register Bus control for RabbitMQ
-            services.AddSingleton<IBus>(provider => provider.GetRequiredService<IBusControl>());
-
-            //Register Bus Service hosting
-            services.AddSingleton<IHostedService, ServiceBus.ServiceBus>();
         }
     }
 }
