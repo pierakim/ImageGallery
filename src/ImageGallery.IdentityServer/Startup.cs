@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -13,12 +14,19 @@ namespace ImageGallery.IdentityServer
 {
     public class Startup
     {
+        public IConfiguration _configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
 
-            const string identityServerConnectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.IdentityServer.DB;trusted_connection=yes;";
-            const string aspNetIdentityconnectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=ImageGallery.AspIdentityProvider.DB;trusted_connection=yes;";
+            var identityServerConnectionString = _configuration["IdentityServer:connectionString"];
+            var aspNetIdentityconnectionString = _configuration["AspNetIdentity:connectionString"];
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
             //AspNet Core Identity

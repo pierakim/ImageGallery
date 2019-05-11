@@ -1,10 +1,9 @@
-﻿using ImageGallery.API.Entities;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
+using Microsoft.Extensions.Configuration;
+using Serilog;
+using Serilog.Events;
+using System.IO;
 
 namespace ImageGallery.API
 {
@@ -12,31 +11,27 @@ namespace ImageGallery.API
     {
         public static void Main(string[] args)
         {
-            var host = BuildWebHost(args);
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddCommandLine(args)
+                .Build();
 
-            // migrate & seed the database.  Best practice = in Main, using service scope
-            //using (var scope = host.Services.CreateScope())
-            //{
-            //    try
-            //    {
-            //        var context = scope.ServiceProvider.GetService<GalleryContext>();
-            //        context.Database.Migrate();
-            //        context.EnsureSeedDataForContext();
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            //        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
-            //    }
-            //}
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+                //.Enrich.With(new LogEnricher())
+                .WriteTo.Seq(config["Seq:Url"]/*, apiKey: "MyAppsApiKey"*/)
+                .CreateLogger();
 
-            // run the web app
-            host.Run();
+            Log.Information("Starting - Image API Web Host");
+            BuildWebHost(args).Run();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseSerilog()
                 .Build();
     }
 }
