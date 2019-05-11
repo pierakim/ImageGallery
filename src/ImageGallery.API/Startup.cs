@@ -18,11 +18,11 @@ namespace ImageGallery.API
 {
     public class Startup
     {
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration { get; }
 
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -42,7 +42,7 @@ namespace ImageGallery.API
             // register the DbContext on the container, getting the connection string from
             // appSettings (note: use this during development; in a production environment,
             // it's better to store the connection string in an environment variable)
-            var connectionString = Configuration["ConnectionStrings:imageGalleryDBConnectionString"];
+            var connectionString = _configuration["ConnectionStrings:imageGalleryDBConnectionString"];
             services.AddDbContext<GalleryContext>(o => o.UseSqlServer(connectionString));
 
             // register the repository

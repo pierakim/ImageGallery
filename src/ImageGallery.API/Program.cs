@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;
+using System.IO;
 
 namespace ImageGallery.API
 {
@@ -9,11 +11,17 @@ namespace ImageGallery.API
     {
         public static void Main(string[] args)
         {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddCommandLine(args)
+                .Build();
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
                 //.Enrich.With(new LogEnricher())
-                .WriteTo.Seq("http://192.168.99.100:5341"/*, apiKey: "MyAppsApiKey"*/)
+                .WriteTo.Seq(config["Seq:Url"]/*, apiKey: "MyAppsApiKey"*/)
                 .CreateLogger();
 
             Log.Information("Starting - Image API Web Host");
